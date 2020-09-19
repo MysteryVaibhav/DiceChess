@@ -1,9 +1,6 @@
 <H2>Dice Chess</H2>
-<div id="board" style="width: 600px"></div>
-<h3 id="turn"></h3>
 
-
-<div id="myBoard" style="width: 400px"></div>
+<div id="myBoard" style="width: 600px"></div>
 <label>Status:</label>
 <div id="status"></div>
 <label>FEN:</label>
@@ -12,8 +9,19 @@
 <div id="pgn"></div>
 <p id="dice"></p>
 
+<style type="text/css">
+.highlight-white {
+  box-shadow: inset 0 0 3px 3px yellow;
+}
+.highlight-black {
+  box-shadow: inset 0 0 3px 3px blue;
+}
+</style>
+
 <button id="startPositionBtn">Start Position</button>
 <button id="flipOrientationBtn">Flip Board</button>
+<button id="autoOrientation">Auto Orientation is Off</button>
+<button id="highlights">Highlights are On</button>
 <link rel="stylesheet" href="chessboard.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="chessboard.js"></script>

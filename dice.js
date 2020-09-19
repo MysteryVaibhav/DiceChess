@@ -4,7 +4,14 @@ var dicesToMove = []
 var $status = $('#status')
 var $fen = $('#fen')
 var $pgn = $('#pgn')
-
+var $board = $('#myBoard')
+var squareClass = 'square-55d63'
+var whiteSquareGrey = '#a9a9a9'
+var blackSquareGrey = '#696969'
+var currPiece = null
+var currMove = null
+var autoOrientation = false
+var isHighlight = true
 
 function resetBoard () {
   var config = {
@@ -12,17 +19,42 @@ function resetBoard () {
     position: 'start',
     onDragStart: onDragStart,
     onDrop: onDrop,
+    onMouseoutSquare: onMouseoutSquare,
+    onMouseoverSquare: onMouseoverSquare,
     onSnapEnd: onSnapEnd
   }
   board = Chessboard('myBoard', config)
   game = new Chess()
   dicesToMove = []
-  var currPiece = null
+  currPiece = null
+  currMove = null
   updateStatus()
 }
 
 function flip () {
   board.flip()
+}
+
+function orientate () {
+  if (autoOrientation) {
+    document.getElementById('autoOrientation').innerHTML = "Auto Orientation is Off"
+    autoOrientation = false;
+  } else {
+    document.getElementById('autoOrientation').innerHTML = "Auto Orientation is On"
+    autoOrientation = true;
+  }
+}
+
+function toHighlight () {
+  if (isHighlight) {
+    document.getElementById('highlights').innerHTML = "Highlights are Off"
+    $board.find('.' + squareClass).removeClass('highlight-black')
+    $board.find('.' + squareClass).removeClass('highlight-white')
+    isHighlight = false;
+  } else {
+    document.getElementById('highlights').innerHTML = "Highlights are On"
+    isHighlight = true;
+  }
 }
 
 function isValidRoll(piece) {
@@ -62,7 +94,7 @@ function onDragStart (source, piece, position, orientation) {
 function onDrop (source, target) {
   var currTurn = game.turn();
   // see if the move is legal
-  var move = game.move({
+  move = game.move({
     from: source,
     to: target,
     promotion: 'q' // NOTE: always promote to a queen for example simplicity
@@ -74,6 +106,7 @@ function onDrop (source, target) {
     game.undo();
     return 'snapback';
   }
+  currMove = move;
   updateStatus()
 }
 
@@ -81,6 +114,53 @@ function onDrop (source, target) {
 // for castling, en passant, pawn promotion
 function onSnapEnd () {
   board.position(game.fen())
+}
+
+function removeGreySquares () {
+  $('#myBoard .square-55d63').css('background', '')
+}
+
+function greySquare (square) {
+  var $square = $('#myBoard .square-' + square)
+
+  var background = whiteSquareGrey
+  if ($square.hasClass('black-3c85d')) {
+    background = blackSquareGrey
+  }
+
+  $square.css('background', background)
+}
+
+function onMouseoverSquare (square, piece) {
+  if (isHighlight) {
+    // get list of possible moves for this square
+    var moves = game.moves({
+      square: square,
+      verbose: true
+    })
+
+    // exit if there are no moves available for this square
+    if (moves.length === 0) return
+
+    // highlight the square they moused over
+    if (game.turn() + dicesToMove[0] == piece || game.turn() + dicesToMove[1] == piece || game.turn() + dicesToMove[2] == piece) {
+      greySquare(square)
+    }
+
+    // highlight the possible squares for this piece
+    for (var i = 0; i < moves.length; i++) {
+      if (moves[i].piece.toUpperCase() === dicesToMove[0] || moves[i].piece.toUpperCase() === dicesToMove[1] || moves[i].piece.toUpperCase() === dicesToMove[2]) {
+        greySquare(moves[i].to)
+      }
+
+    }
+  }
+}
+
+function onMouseoutSquare (square, piece) {
+  if (isHighlight) {
+    removeGreySquares()
+  }
 }
 
 function updateStatus () {
@@ -114,9 +194,32 @@ function updateStatus () {
     dicesToMove = rollDices();
     document.getElementById('dice').innerHTML = "";
 
+    // Highlight last move
+    if (isHighlight) {
+      if (currMove !== null && currMove.color === 'w') {
+        $board.find('.' + squareClass).removeClass('highlight-white')
+        $board.find('.square-' + currMove.from).addClass('highlight-white')
+        $board.find('.square-' + currMove.to)
+          .addClass('highlight-' + 'white')
+      } else if (currMove !== null && currMove.color === 'b') {
+        $board.find('.' + squareClass).removeClass('highlight-black')
+        $board.find('.square-' + currMove.from).addClass('highlight-black')
+        $board.find('.square-' + currMove.to)
+          .addClass('highlight-' + 'black')
+      }
+    }
+
     if (game.turn() === 'b') {
+      if (autoOrientation) {
+        board.orientation('black')
+      }
+      // Roll Dice
       dicesToMove.forEach(piece => document.getElementById('dice').innerHTML += "<img src=img/chesspieces/wikipedia/b" + piece + ".png>")
     } else {
+      if (autoOrientation) {
+        board.orientation('white')
+      }
+      //Roll dice
       dicesToMove.forEach(piece => document.getElementById('dice').innerHTML += "<img src=img/chesspieces/wikipedia/w" + piece + ".png>")
     }
   }
@@ -130,3 +233,5 @@ resetBoard()
 
 $('#startPositionBtn').on('click', resetBoard)
 $('#flipOrientationBtn').on('click', flip)
+$('#autoOrientation').on('click', orientate)
+$('#highlights').on('click', toHighlight)
