@@ -53,7 +53,7 @@ function rollDices() {
   var map = {1:"P", 2:"N", 3:"K", 4:"Q", 5:"R", 6:"B"};
   var throws = [Math.floor(Math.random() * 6) + 1, Math.floor(Math.random() * 6) + 1, Math.floor(Math.random() * 6) + 1];
   while (! (isValidRoll(map[throws[0]]) || isValidRoll(map[throws[1]]) || isValidRoll(map[throws[2]]))) {
-    return rollDices();
+    throws = [Math.floor(Math.random() * 6) + 1, Math.floor(Math.random() * 6) + 1, Math.floor(Math.random() * 6) + 1];
   }
   return [map[throws[0]], map[throws[1]], map[throws[2]]];
 }
@@ -75,15 +75,15 @@ function onDrop (source, target, piece, newPos, oldPos, orientation) {
   // console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 
   var currTurn = game.turn();
-  var isValidMove = game.move({ from: source, to: target });
+  var isValidMove = game.move({ from: source, to: target, promotion: 'q'});
   if (isValidMove === null || !inProgress) {
     // don't move
     return 'snapback';
   }
-  if (!(currTurn + dicesToMove[0] === piece || currTurn + dicesToMove[1] === piece || currTurn + dicesToMove[2] === piece)) {
-    game.undo();
-    return 'snapback';
-  }
+  // if (!(currTurn + dicesToMove[0] === piece || currTurn + dicesToMove[1] === piece || currTurn + dicesToMove[2] === piece)) {
+  //   game.undo();
+  //   return 'snapback';
+  // }
 
   bookKeeping();
 }
